@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import api from '../shared/api/api';
 import Modal from '../shared/components/Modal';
 import { useApp } from '../shared/context/AppContext';
@@ -8,6 +9,7 @@ const Login: React.FC = () => {
   const { showNotification } = useApp();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [requestData, setRequestData] = useState({ name: '', slug: '', adminName: '', adminEmail: '' });
@@ -20,9 +22,16 @@ const Login: React.FC = () => {
       const response = await api.post('/auth/login', { email, password });
       localStorage.setItem('accessToken', response.data.accessToken);
       localStorage.setItem('refreshToken', response.data.refreshToken);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      // Normalize user object to have both id and _id for compatibility
+      const userData = {
+        ...response.data.user,
+        _id: response.data.user.id || response.data.user._id,
+        id: response.data.user.id || response.data.user._id
+      };
+      localStorage.setItem('user', JSON.stringify(userData));
 
-      if (response.data.user.role === 'super_admin') {
+      if (userData.role === 'super_admin') {
         navigate('/super-admin');
       } else if (response.data.user.role === 'admin') {
         navigate('/admin');
@@ -79,14 +88,23 @@ const Login: React.FC = () => {
           </div>
           <div>
             <label className="block mb-1 text-sm font-semibold text-gray-700">Password</label>
-            <input
-              type="password"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 transition-all"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 transition-all pr-12"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
           <button
             type="submit"

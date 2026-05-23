@@ -7,8 +7,9 @@ import {
   Globe, 
   CreditCard,
   LogOut,
-  Settings,
-  Bell
+  Settings as SettingsIcon,
+  Bell,
+  Users
 } from 'lucide-react';
 import { useApp } from '../../shared/context/AppContext';
 import Analytics from './Analytics';
@@ -16,6 +17,8 @@ import BlogList from './blogs/BlogList';
 import CommentList from './comments/CommentList';
 import DomainList from './domains/DomainList';
 import BillingDashboard from './billing/BillingDashboard';
+import UserList from './users/UserList';
+import SettingsPage from './settings/Settings';
 
 const AdminDashboard: React.FC = () => {
   const { showConfirm } = useApp();
@@ -41,8 +44,10 @@ const AdminDashboard: React.FC = () => {
     { path: '/admin', icon: <LayoutDashboard size={20} />, label: 'Analytics', end: true },
     { path: '/admin/blogs', icon: <FileText size={20} />, label: 'Blogs' },
     { path: '/admin/comments', icon: <MessageSquare size={20} />, label: 'Comments' },
+    { path: '/admin/users', icon: <Users size={20} />, label: 'Users' },
     { path: '/admin/domains', icon: <Globe size={20} />, label: 'Domains' },
     { path: '/admin/billing', icon: <CreditCard size={20} />, label: 'Billing' },
+    { path: '/admin/settings', icon: <SettingsIcon size={20} />, label: 'Settings' },
   ];
 
   const isActive = (path: string, end: boolean = false) => {
@@ -119,8 +124,11 @@ const AdminDashboard: React.FC = () => {
               <Bell size={20} />
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
             </button>
-            <button className="p-2.5 text-gray-400 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-all">
-              <Settings size={20} />
+            <button 
+              onClick={() => navigate('/admin/settings')}
+              className="p-2.5 text-gray-400 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-all"
+            >
+              <SettingsIcon size={20} />
             </button>
             <div className="h-8 w-px bg-gray-100 mx-2"></div>
             <div className="flex items-center gap-3 pl-2">
@@ -139,8 +147,10 @@ const AdminDashboard: React.FC = () => {
               <Route path="/" element={<Analytics />} />
               <Route path="/blogs" element={<BlogList />} />
               <Route path="/comments" element={<CommentList />} />
+              <Route path="/users" element={<UserList />} />
               <Route path="/domains" element={<DomainList />} />
               <Route path="/billing" element={<BillingDashboard />} />
+              <Route path="/settings" element={<SettingsPage />} />
             </Routes>
           </div>
         </div>
