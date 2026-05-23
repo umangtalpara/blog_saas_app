@@ -24,6 +24,8 @@ const AdminDashboard: React.FC = () => {
   const { showConfirm } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
+  
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   const handleLogout = () => {
     showConfirm({
@@ -93,11 +95,15 @@ const AdminDashboard: React.FC = () => {
         <div className="p-4 mt-auto">
           <div className="bg-gray-50 p-4 rounded-3xl border border-gray-100 mb-4">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-blue-600 font-bold">
-                AD
+              <div className="w-10 h-10 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-blue-600 font-bold overflow-hidden">
+                {user.profilePic ? (
+                  <img src={user.profilePic} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  user.name?.charAt(0) || 'A'
+                )}
               </div>
               <div>
-                <div className="text-sm font-bold text-gray-900">Admin Panel</div>
+                <div className="text-sm font-bold text-gray-900 truncate max-w-[120px]">{user.name || 'Admin'}</div>
                 <div className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Active Plan: Pro</div>
               </div>
             </div>
@@ -133,10 +139,16 @@ const AdminDashboard: React.FC = () => {
             <div className="h-8 w-px bg-gray-100 mx-2"></div>
             <div className="flex items-center gap-3 pl-2">
               <div className="text-right hidden sm:block">
-                <div className="text-sm font-bold text-gray-900 leading-none mb-1">Admin User</div>
-                <div className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Site Owner</div>
+                <div className="text-sm font-bold text-gray-900 leading-none mb-1">{user.name || 'Admin User'}</div>
+                <div className="text-[10px] font-medium text-gray-500 uppercase tracking-wider capitalize">{user.role || 'Site Owner'}</div>
               </div>
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-100"></div>
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-100 overflow-hidden flex items-center justify-center">
+                {user.profilePic ? (
+                  <img src={user.profilePic} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-white font-black text-sm">{user.name?.charAt(0) || 'A'}</span>
+                )}
+              </div>
             </div>
           </div>
         </header>
