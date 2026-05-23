@@ -82,6 +82,8 @@ export const useBlogEditor = (id: string | undefined) => {
       const data = { ...formData };
       if (statusOverride) data.status = statusOverride as any;
       
+      console.log('Saving blog data:', data);
+      
       if (id) {
         return await blogService.update(id, data);
       } else {

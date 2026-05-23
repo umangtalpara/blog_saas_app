@@ -26,7 +26,7 @@ const BlogPost: React.FC<{ tenant: any; basePath: string }> = ({ tenant, basePat
 
   const fetchBlog = async () => {
     try {
-      const headers = basePath ? { 'X-Tenant-Slug': tenant.slug } : {};
+      const headers = { 'X-Tenant-Slug': tenant.slug };
       const response = await api.get(`/public/blogs/${slug}`, { headers });
       setBlog(response.data);
       
@@ -74,9 +74,10 @@ const BlogPost: React.FC<{ tenant: any; basePath: string }> = ({ tenant, basePat
         </div>
       </header>
 
-      <div className="prose prose-lg max-w-none text-gray-800 leading-relaxed whitespace-pre-wrap">
-        {blog.content}
-      </div>
+      <div 
+        className="prose prose-lg max-w-none text-gray-800 leading-relaxed"
+        dangerouslySetInnerHTML={{ __html: blog.content }}
+      />
     </article>
   );
 };

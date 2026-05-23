@@ -56,8 +56,9 @@
   content: "";
 }
 
-.prose img {
-  @apply rounded-xl border border-gray-100 shadow-sm;
+.prose img,
+.prose video {
+  @apply rounded-xl border border-gray-100 shadow-sm mx-auto my-8 block max-w-full h-auto;
 }
 
 .prose blockquote {

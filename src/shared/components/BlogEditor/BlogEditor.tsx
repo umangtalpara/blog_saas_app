@@ -47,8 +47,9 @@ const BlogEditor: React.FC = () => {
       if (!id && result._id) {
         navigate(`/admin/blogs/edit/${result._id}`, { replace: true });
       }
-    } catch (err) {
-      showNotification('Error', 'Failed to save blog', 'error');
+    } catch (err: any) {
+      const message = err.response?.data?.message || 'Failed to save blog';
+      showNotification('Error', Array.isArray(message) ? message[0] : message, 'error');
     }
   };
 
@@ -137,8 +138,23 @@ const BlogEditor: React.FC = () => {
               />
               <TitleInput 
                 value={formData.title} 
-                onChange={(val) => updateField('title', val)} 
+                onChange={(val) => {
+                  updateField('title', val);
+                  // Auto-generate slug if it's currently empty or matches the old title
+                  if (!formData.slug || formData.slug === formData.title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')) {
+                    updateField('slug', val.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-'));
+                  }
+                }} 
               />
+              {!formData.slug && (
+                <button 
+                  onClick={() => setActiveTab('seo')}
+                  className="text-xs text-red-500 mb-6 flex items-center gap-1 hover:underline"
+                >
+                  <AlertCircle size={12} />
+                  Slug is required for the URL. Click to set in SEO settings.
+                </button>
+              )}
               <SubtitleInput 
                 value={formData.subtitle} 
                 onChange={(val) => updateField('subtitle', val)} 
@@ -146,6 +162,8 @@ const BlogEditor: React.FC = () => {
               <RichEditor 
                 content={formData.content} 
                 onChange={(content) => updateField('content', content)} 
+                onImageUpload={(url) => updateField('media', [...formData.media, url])}
+                onVideoUpload={(url) => updateField('videos', [...formData.videos, url])}
               />
             </div>
           )}

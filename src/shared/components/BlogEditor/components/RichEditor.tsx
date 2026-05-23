@@ -1,6 +1,6 @@
-import React from 'react';
-import { useEditor, EditorContent } from '@tiptap/react';
-import { BubbleMenu, FloatingMenu } from '@tiptap/react/menus';
+import React, { useRef } from 'react';
+import { useEditor, EditorContent, Node, mergeAttributes } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
@@ -14,18 +14,115 @@ import { common, createLowlight } from 'lowlight';
 import { 
   Bold, Italic, Underline as UnderlineIcon, List, ListOrdered, 
   Code, Quote, Image as ImageIcon, Link as LinkIcon, 
-  Heading1, Heading2, Heading3, Type, CheckSquare, Video as YoutubeIcon
+  Heading1, Heading2, Heading3, CheckSquare, Video as VideoIcon,
+  Play as YoutubeIcon, Loader2
 } from 'lucide-react';
+import { mediaService } from '../../../services/media.service';
 
 const lowlight = createLowlight(common);
 
+const MenuButton = ({ onClick, isActive, children, title, disabled }: any) => (
+  <button
+    onClick={(e) => {
+      e.preventDefault();
+      onClick();
+    }}
+    disabled={disabled}
+    className={`p-2 rounded-md transition-colors ${
+      isActive ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+    } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+    title={title}
+  >
+    {children}
+  </button>
+);
+
+// Custom Video Extension
+const Video = Node.create({
+  name: 'video',
+  group: 'block',
+  selectable: true,
+  draggable: true,
+  atom: true,
+
+  addAttributes() {
+    return {
+      src: {
+        default: null,
+      },
+      controls: {
+        default: true,
+      },
+      width: {
+        default: '100%',
+      },
+    };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: 'video',
+      },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['video', mergeAttributes(HTMLAttributes, { class: 'rounded-lg max-w-full my-8 block mx-auto' })];
+  },
+
+  addCommands(): any {
+    return {
+      setVideo: (options: { src: string }) => ({ commands }: any) => {
+        return commands.insertContent({
+          type: this.name,
+          attrs: options,
+        });
+      },
+    };
+  },
+});
 interface RichEditorProps {
   content: string;
   onChange: (content: string) => void;
+  onImageUpload?: (url: string) => void;
+  onVideoUpload?: (url: string) => void;
   placeholder?: string;
 }
 
-const RichEditor: React.FC<RichEditorProps> = ({ content, onChange, placeholder = 'Start writing...' }) => {
+const RichEditor: React.FC<RichEditorProps> = ({ 
+  content, 
+  onChange, 
+  onImageUpload,
+  onVideoUpload,
+  placeholder = 'Start writing...' 
+}) => {
+  const [isUploading, setIsUploading] = React.useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = async (file: File) => {
+    if (!editor) return;
+
+    try {
+      setIsUploading(true);
+      const url = await mediaService.upload(file);
+
+      if (file.type.startsWith('image/')) {
+        editor.chain().focus().setImage({ src: url }).run();
+        if (onImageUpload) onImageUpload(url);
+      } else if (file.type.startsWith('video/')) {
+        (editor.commands as any).setVideo({ src: url });
+        if (onVideoUpload) onVideoUpload(url);
+      }
+    } catch (error) {
+      console.error('Media upload failed:', error);
+      alert('Failed to upload media. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -37,9 +134,10 @@ const RichEditor: React.FC<RichEditorProps> = ({ content, onChange, placeholder 
       }),
       Image.configure({
         HTMLAttributes: {
-          class: 'rounded-lg max-w-full h-auto my-8',
+          class: 'rounded-lg max-w-full h-auto my-8 block mx-auto',
         },
       }),
+      Video,
       Placeholder.configure({
         placeholder,
       }),
@@ -61,7 +159,33 @@ const RichEditor: React.FC<RichEditorProps> = ({ content, onChange, placeholder 
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-lg max-w-none focus:outline-none min-h-[500px]',
+        class: 'prose prose-lg max-w-none focus:outline-none min-h-[500px] px-4 py-2',
+      },
+      handleDrop: (_view, event, _slice, moved) => {
+        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
+          const file = event.dataTransfer.files[0];
+          const isImage = file.type.startsWith('image/');
+          const isVideo = file.type.startsWith('video/');
+
+          if (isImage || isVideo) {
+            handleFileUpload(file);
+            return true;
+          }
+        }
+        return false;
+      },
+      handlePaste: (_view, event, _slice) => {
+        if (event.clipboardData && event.clipboardData.files && event.clipboardData.files[0]) {
+          const file = event.clipboardData.files[0];
+          const isImage = file.type.startsWith('image/');
+          const isVideo = file.type.startsWith('video/');
+
+          if (isImage || isVideo) {
+            handleFileUpload(file);
+            return true;
+          }
+        }
+        return false;
       },
     },
   });
@@ -70,11 +194,12 @@ const RichEditor: React.FC<RichEditorProps> = ({ content, onChange, placeholder 
     return null;
   }
 
-  const addImage = () => {
-    const url = window.prompt('URL');
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
-    }
+  const triggerImageUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const triggerVideoUpload = () => {
+    videoInputRef.current?.click();
   };
 
   const addYoutubeVideo = () => {
@@ -97,23 +222,40 @@ const RichEditor: React.FC<RichEditorProps> = ({ content, onChange, placeholder 
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
   };
 
-  const MenuButton = ({ onClick, isActive, children, title }: any) => (
-    <button
-      onClick={(e) => {
-        e.preventDefault();
-        onClick();
-      }}
-      className={`p-2 rounded-md transition-colors ${
-        isActive ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-      }`}
-      title={title}
-    >
-      {children}
-    </button>
-  );
-
   return (
     <div className="relative">
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept="image/*"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFileUpload(file);
+          e.target.value = '';
+        }}
+      />
+      <input
+        type="file"
+        ref={videoInputRef}
+        className="hidden"
+        accept="video/*"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFileUpload(file);
+          e.target.value = '';
+        }}
+      />
+
+      {isUploading && (
+        <div className="absolute inset-0 z-50 bg-white/50 backdrop-blur-[1px] flex items-center justify-center rounded-lg">
+          <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-100 flex items-center gap-3">
+            <Loader2 className="animate-spin text-blue-600" size={20} />
+            <span className="text-sm font-medium text-gray-700">Uploading media...</span>
+          </div>
+        </div>
+      )}
+
       <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-gray-100 py-2 mb-8 flex flex-wrap gap-1">
         <MenuButton 
           onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} 
@@ -199,8 +341,11 @@ const RichEditor: React.FC<RichEditorProps> = ({ content, onChange, placeholder 
         <MenuButton onClick={setLink} isActive={editor.isActive('link')} title="Insert Link">
           <LinkIcon size={18} />
         </MenuButton>
-        <MenuButton onClick={addImage} title="Insert Image">
+        <MenuButton onClick={triggerImageUpload} title="Upload Image" disabled={isUploading}>
           <ImageIcon size={18} />
+        </MenuButton>
+        <MenuButton onClick={triggerVideoUpload} title="Upload Video" disabled={isUploading}>
+          <VideoIcon size={18} />
         </MenuButton>
         <MenuButton onClick={addYoutubeVideo} title="Insert YouTube Video">
           <YoutubeIcon size={18} />
@@ -210,7 +355,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ content, onChange, placeholder 
       <EditorContent editor={editor} />
 
       {editor && (
-        <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }} className="bg-white shadow-xl border border-gray-200 rounded-lg overflow-hidden flex divide-x divide-gray-100">
+        <BubbleMenu editor={editor} className="bg-white shadow-xl border border-gray-200 rounded-lg overflow-hidden flex divide-x divide-gray-100">
           <button
             onClick={() => editor.chain().focus().toggleBold().run()}
             className={`px-3 py-1.5 hover:bg-gray-50 transition-colors ${editor.isActive('bold') ? 'text-blue-600 bg-blue-50' : 'text-gray-600'}`}
@@ -236,3 +381,4 @@ const RichEditor: React.FC<RichEditorProps> = ({ content, onChange, placeholder 
 };
 
 export default RichEditor;
+

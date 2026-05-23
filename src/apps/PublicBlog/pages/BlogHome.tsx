@@ -21,7 +21,7 @@ const BlogHome: React.FC<{ tenant: any; basePath: string }> = ({ tenant, basePat
 
   const fetchBlogs = async () => {
     try {
-      const headers = basePath ? { 'X-Tenant-Slug': tenant.slug } : {};
+      const headers = { 'X-Tenant-Slug': tenant.slug };
       const response = await api.get('/public/blogs', { headers });
       setBlogs(response.data);
     } catch (err) {
@@ -60,7 +60,7 @@ const BlogHome: React.FC<{ tenant: any; basePath: string }> = ({ tenant, basePat
                   </time>
                 </div>
                 <p className="text-lg text-gray-600 line-clamp-3 leading-relaxed">
-                  {blog.content.substring(0, 200)}...
+                  {blog.content.replace(/<[^>]*>?/gm, '').substring(0, 200)}...
                 </p>
                 <div className="mt-6 flex items-center text-blue-600 font-bold group-hover:translate-x-1 transition-transform inline-flex">
                   Read more <span className="ml-1">→</span>

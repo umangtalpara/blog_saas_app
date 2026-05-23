@@ -57,11 +57,20 @@ const PublicBlogLayout: React.FC = () => {
 
       <main className="max-w-5xl mx-auto px-6 py-12">
         <Routes>
-          <Route path="/" element={<BlogHome tenant={tenant} basePath={basePath} />} />
-          {/* If in /p/ mode, the slug is at the next level */}
-          <Route path="/:slug" element={<BlogPost tenant={tenant} basePath={basePath} />} />
-          {/* For /p/tenantSlug/blog-slug */}
-          <Route path="/*" element={<BlogHome tenant={tenant} basePath={basePath} />} />
+          {/* If location starts with /p/, we need to handle the tenantSlug segment */}
+          {location.pathname.startsWith('/p/') ? (
+            <>
+              <Route path="/:tenantSlug" element={<BlogHome tenant={tenant} basePath={basePath} />} />
+              <Route path="/:tenantSlug/:slug" element={<BlogPost tenant={tenant} basePath={basePath} />} />
+              <Route path="*" element={<BlogHome tenant={tenant} basePath={basePath} />} />
+            </>
+          ) : (
+            <>
+              <Route path="/" element={<BlogHome tenant={tenant} basePath={basePath} />} />
+              <Route path="/:slug" element={<BlogPost tenant={tenant} basePath={basePath} />} />
+              <Route path="*" element={<BlogHome tenant={tenant} basePath={basePath} />} />
+            </>
+          )}
         </Routes>
       </main>
 
