@@ -339,6 +339,13 @@ Phase 6
 
 - AI draft generation
 
+Phase 7
+
+- Analytics Engine
+- Blog Interaction Tracking (Reads, Likes, Shares)
+- Tenant Analytics Dashboard (Graphs, Charts, Key Metrics)
+- Configurable Commenting System (Per-blog toggle)
+
 =================================================
 CURRENT STATUS
 =================================================
@@ -349,10 +356,10 @@ Completed:
 - API design
 
 Current Phase:
-Phase 6
+Phase 7
 
 In Progress:
-- AI draft generation setup
+- Analytics data aggregation fine-tuning
 
 Completed:
 - Project architecture
@@ -379,6 +386,12 @@ Completed:
 - Subscription Plans (Free, Pro, Enterprise)
 - Billing Dashboard & Customer Portal (Frontend)
 - Plan-based feature gating (post limits, custom domains, white-labeling)
+- Analytics Engine (Backend tracking for views, likes, shares)
+- Time-series Data Schema (Daily metric aggregation)
+- Public Interaction Hook (Automatic view tracking)
+- Configurable Commenting System (Per-blog moderation)
+- Rich Tenant Dashboard (Interactive charts using Recharts)
+- Comment Moderation UI (Admin approve/reject flow)
 
 Next Tasks:
 1. Integrate OpenAI/Anthropic API for content generation
