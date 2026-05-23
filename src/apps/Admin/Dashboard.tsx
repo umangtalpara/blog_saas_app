@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -46,11 +46,11 @@ const AdminDashboard: React.FC = () => {
     { path: '/admin', icon: <LayoutDashboard size={20} />, label: 'Analytics', end: true },
     { path: '/admin/blogs', icon: <FileText size={20} />, label: 'Blogs' },
     { path: '/admin/comments', icon: <MessageSquare size={20} />, label: 'Comments' },
-    { path: '/admin/users', icon: <Users size={20} />, label: 'Users' },
-    { path: '/admin/domains', icon: <Globe size={20} />, label: 'Domains' },
-    { path: '/admin/billing', icon: <CreditCard size={20} />, label: 'Billing' },
+    { path: '/admin/users', icon: <Users size={20} />, label: 'Users', roles: ['admin'] },
+    { path: '/admin/domains', icon: <Globe size={20} />, label: 'Domains', roles: ['admin'] },
+    { path: '/admin/billing', icon: <CreditCard size={20} />, label: 'Billing', roles: ['admin'] },
     { path: '/admin/settings', icon: <SettingsIcon size={20} />, label: 'Settings' },
-  ];
+  ].filter(item => !item.roles || item.roles.includes(user.role));
 
   const isActive = (path: string, end: boolean = false) => {
     if (end) return location.pathname === path;
@@ -159,10 +159,19 @@ const AdminDashboard: React.FC = () => {
               <Route path="/" element={<Analytics />} />
               <Route path="/blogs" element={<BlogList />} />
               <Route path="/comments" element={<CommentList />} />
-              <Route path="/users" element={<UserList />} />
-              <Route path="/domains" element={<DomainList />} />
-              <Route path="/billing" element={<BillingDashboard />} />
               <Route path="/settings" element={<SettingsPage />} />
+              
+              {/* Admin Only Routes */}
+              {user.role === 'admin' && (
+                <>
+                  <Route path="/users" element={<UserList />} />
+                  <Route path="/domains" element={<DomainList />} />
+                  <Route path="/billing" element={<BillingDashboard />} />
+                </>
+              )}
+              
+              {/* Fallback */}
+              <Route path="*" element={<Navigate to="/admin" replace />} />
             </Routes>
           </div>
         </div>

@@ -33,10 +33,10 @@ const Login: React.FC = () => {
 
       if (userData.role === 'super_admin') {
         navigate('/super-admin');
-      } else if (response.data.user.role === 'admin') {
+      } else if (userData.role === 'admin' || userData.role === 'editor') {
         navigate('/admin');
       } else {
-        navigate('/editor');
+        navigate('/admin'); // Default fallback to admin panel
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
